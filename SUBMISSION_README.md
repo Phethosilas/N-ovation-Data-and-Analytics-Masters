@@ -2,7 +2,7 @@
 
 **Repository:** https://github.com/Phethosilas/N-ovation-Data-and-Analytics-Masters
 **Stages:** 1, 2, and 3 (all implemented)
-**Author:** Phethosila S
+**Author:** PhethosilaS
 **Date:** April 29, 2026
 
 ---

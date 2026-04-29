@@ -9,10 +9,9 @@ logger = get_logger(__name__)
 
 
 def write_bronze(df, output_path, source_name):
-    """Write DataFrame to Bronze layer in Delta format"""
+    """Write DataFrame to Bronze layer"""
     full_path = os.path.join(output_path, source_name)
     logger.info(f"Writing Bronze {source_name} to: {full_path}")
-    
     df.write.mode("overwrite").format("parquet").save(full_path)
 
 
