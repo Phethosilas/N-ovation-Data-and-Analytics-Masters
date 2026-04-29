@@ -7,6 +7,16 @@ from pyspark.sql.window import Window
 
 from .common import get_spark_session, get_logger
 
+# Import DQ handler for Stage 2+
+try:
+    from .dq_handler import (
+        load_dq_rules, deduplicate_transactions, handle_orphaned_transactions,
+        normalize_amount, normalize_dates, normalize_currency
+    )
+    DQ_AVAILABLE = True
+except ImportError:
+    DQ_AVAILABLE = False
+
 logger = get_logger(__name__)
 
 
@@ -70,7 +80,17 @@ def run_transform(config: dict):
     # --- Deduplicate ---
     customers_df = deduplicate(customers_df, "customer_id", ["customer_id"])
     accounts_df = deduplicate(accounts_df, "account_id", ["open_date"])
-    transactions_df = deduplicate(transactions_df, "transaction_id", ["transaction_date", "transaction_time"])
+    
+    # Stage 2+: Use DQ-aware deduplication for transactions
+    if DQ_AVAILABLE:
+        try:
+            dq_rules = load_dq_rules()
+            transactions_df, dup_count = deduplicate_transactions(transactions_df)
+        except Exception as e:
+            logger.warning(f"DQ handler not available, using basic deduplication: {e}")
+            transactions_df = deduplicate(transactions_df, "transaction_id", ["transaction_date", "transaction_time"])
+    else:
+        transactions_df = deduplicate(transactions_df, "transaction_id", ["transaction_date", "transaction_time"])
     
     # --- Link accounts to customers (validate referential integrity) ---
     # Rename customer_ref to customer_id for consistency

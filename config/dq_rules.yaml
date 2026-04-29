@@ -1,0 +1,59 @@
+# Data Quality Rules Configuration - Stage 2+
+# Defines detection and handling for each DQ issue type
+
+dq_rules:
+  duplicate_transactions:
+    description: "Duplicate transaction events with same transaction_id"
+    detection: "row_number() partitioned by transaction_id"
+    handling: "DEDUPLICATED_KEEP_FIRST"
+    action: "Keep first record by transaction_timestamp, flag others"
+    dq_flag_value: "DUPLICATE_DEDUPED"
+    
+  orphaned_transactions:
+    description: "Transactions with account_id not in accounts table"
+    detection: "LEFT JOIN to accounts, WHERE account_id IS NULL"
+    handling: "QUARANTINED"
+    action: "Exclude from Silver/Gold, log in DQ report"
+    dq_flag_value: "ORPHANED_ACCOUNT"
+    
+  amount_type_mismatch:
+    description: "Amount field delivered as STRING instead of numeric"
+    detection: "typeof(amount) == 'string'"
+    handling: "CAST_TO_DECIMAL"
+    action: "Attempt cast to DECIMAL(18,2), retain if successful"
+    dq_flag_value: "TYPE_MISMATCH"
+    fallback: "EXCLUDED_CAST_FAILED"
+    
+  date_format_inconsistency:
+    description: "Date fields with mixed formats (YYYY-MM-DD, DD/MM/YYYY, epoch)"
+    detection: "Multiple date format patterns in same column"
+    handling: "NORMALISED_DATE"
+    action: "Parse all formats and standardize to YYYY-MM-DD"
+    dq_flag_value: "DATE_FORMAT"
+    
+  currency_variants:
+    description: "Currency field with non-standard ZAR representations"
+    detection: "currency NOT IN ('ZAR')"
+    handling: "NORMALISED_CURRENCY"
+    action: "Map all variants (R, rands, 710, zar) to ZAR"
+    dq_flag_value: "CURRENCY_VARIANT"
+    variant_mappings:
+      R: "ZAR"
+      rands: "ZAR"
+      "710": "ZAR"  # ISO 4217 numeric code
+      zar: "ZAR"
+      Rands: "ZAR"
+      RANDS: "ZAR"
+      
+  null_account_id:
+    description: "Account records with null primary key"
+    detection: "account_id IS NULL"
+    handling: "EXCLUDED_NULL_PK"
+    action: "Exclude from Silver/Gold, cannot be loaded without PK"
+    dq_flag_value: "NULL_REQUIRED"
+
+# Reporting configuration
+reporting:
+  output_path: "/data/output/dq_report.json"
+  include_sample_records: false
+  tolerance_percent: 5.0  # Scoring system allows ±5% variance
