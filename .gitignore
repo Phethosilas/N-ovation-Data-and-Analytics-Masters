@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+.Python
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+parts/
+var/
+*.sdist
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Output directories (critical - scoring system mounts its own)
+/data/
+output/
+*.parquet
+_delta_log/
+*.crc
+*.tmp
+
+# Logs
+*.log
+*.log.*
+logs/
+
+# Test artifacts
+/tmp/test-data/
+/tmp/nedbank-test/
+/tmp/de_test_output.*
+
+# Docker
+*.tar
+*.tar.gz
+
+# Challenge specific - DO NOT commit these
+*.csv
+*.jsonl
+*.json
+dq_report.json
+*.sh
+
+# Spark
+metastore_db/
+derby.log
+spark-warehouse/
+
+# OS
+Thumbs.db
+.DS_Store

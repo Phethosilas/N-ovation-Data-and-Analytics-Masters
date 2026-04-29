@@ -1,0 +1,33 @@
+# Stage 1 Pipeline Configuration - Clean Data Only
+
+paths:
+  input:
+    customers: "/data/input/customers.csv"
+    accounts: "/data/input/accounts.csv"
+    transactions: "/data/input/transactions.jsonl"
+  output:
+    bronze: "/data/output/bronze/"
+    silver: "/data/output/silver/"
+    gold: "/data/output/gold/"
+
+spark:
+  master: "local[2]"
+  app_name: "nedbank-de-stage1"
+  config:
+    spark.executor.memory: "1g"
+    spark.driver.memory: "512m"
+    # Temporarily disabled Delta configs - using Parquet for testing
+    # spark.sql.extensions: "io.delta.sql.DeltaSparkSessionExtension"
+    # spark.sql.catalog.spark_catalog: "org.apache.spark.sql.delta.catalog.DeltaCatalog"
+    spark.default.parallelism: "2"
+    spark.sql.shuffle.partitions: "4"
+
+gold:
+  age_band:
+    buckets:
+      - [18, 26, "18-25"]
+      - [26, 36, "26-35"]
+      - [36, 46, "36-45"]
+      - [46, 56, "46-55"]
+      - [56, 66, "56-65"]
+      - [66, 150, "65+"]
